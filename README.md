@@ -5,8 +5,8 @@
 ## セットアップ
 
 ```bash
-git clone [このリポジトリのURL]
-cd [リポジトリ名]
+git clone https://github.com/KayatoX/life-context.git
+cd life-context
 ```
 
 **必須:**
