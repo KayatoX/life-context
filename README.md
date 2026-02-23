@@ -25,6 +25,29 @@ cd life-context
 
 ---
 
+## セキュリティ
+
+### pre-push hook のインストール（推奨）
+
+APIキーや個人情報の誤push を自動検出するhookを同梱しています。
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-push
+```
+
+### push前チェックリスト
+
+- [ ] `.env` が git 追跡対象になっていない（`git ls-files | grep .env` で確認）
+- [ ] `user-context/` に銀行・医療・パスワード等の機密情報が含まれていない
+- [ ] `assistant/user-insights.md` に意図しない個人情報が含まれていない
+- [ ] NotionMCPのスコープが必要最小限に設定されている
+
+詳細ガイドライン → `.claude/rules/security.md`
+インシデント対応（APIキー誤コミット等）→ `.claude/rules/incident-response.md`
+
+---
+
 ## README.md と CLAUDE.md の使い分け
 
 このリポジトリには両方が存在します。役割が違います。

@@ -1,0 +1,46 @@
+#!/bin/sh
+# pre-push セキュリティチェック
+# インストール: git config core.hooksPath .githooks && chmod +x .githooks/pre-push
+
+echo "🔍 push前セキュリティチェック..."
+
+FAILED=0
+
+# 1. .env が git 管理されていないか確認
+if git ls-files | grep -q "^\.env$"; then
+  echo "❌ .env が git 追跡対象になっています。"
+  echo "   git rm --cached .env && git commit を実行してください。"
+  FAILED=1
+fi
+
+# 2. push対象コミットからAPIキーパターンを検出
+API_KEY_PATTERN='sk-[A-Za-z0-9]{20,}|xai-[A-Za-z0-9]{20,}|AIza[A-Za-z0-9]{35,}|ghp_[A-Za-z0-9]{36,}|Bearer [A-Za-z0-9\-_]{20,}'
+
+while IFS=' ' read -r local_ref local_sha remote_ref remote_sha; do
+  # 削除push はスキップ
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue
+  fi
+
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    RANGE="$local_sha"
+  else
+    RANGE="$remote_sha..$local_sha"
+  fi
+
+  if git log "$RANGE" -p 2>/dev/null | grep -qE "$API_KEY_PATTERN"; then
+    echo "❌ APIキーらしき文字列を push 対象コミットに検出しました。"
+    echo "   git log $RANGE -p で対象コミットを確認してください。"
+    echo "   対応手順: .claude/rules/incident-response.md"
+    FAILED=1
+  fi
+done
+
+if [ "$FAILED" -eq 1 ]; then
+  echo ""
+  echo "push を中止しました。"
+  exit 1
+fi
+
+echo "✅ セキュリティチェック通過"
+exit 0
